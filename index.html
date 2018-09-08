@@ -1,0 +1,49 @@
+<html>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<style>
+			#hidn {display:none;}
+		</style>
+	</head>
+	<body>
+		<canvas id='board_canvas' width='800' height='800' oncontextmenu='return false;'></canvas>
+		<input type='button' value='Reset Board' onclick='board.setMCBoard();board.sendBoardState();'/>
+		<input type='button' value='Force refresh' onclick='board.getBoardState();'/>
+		<input type='text' id='board_id' value='0'/>
+		<input type='button' value='Set Board ID' onclick='board.id=board_id.value;board.getBoardState();'/>
+		<div id='hidn'>
+			<img src='img/checker_black.png' id='checker_black'/>
+			<img src='img/checker_king_black.png' id='checker_king_black'/>
+			<img src='img/pawn_black.png' id='pawn_black'/>
+			<img src='img/rook_black.png' id='rook_black'/>
+			<img src='img/knight_black.png' id='knight_black'/>
+			<img src='img/bishop_black.png' id='bishop_black'/>
+			<img src='img/queen_black.png' id='queen_black'/>
+			<img src='img/king_black.png' id='king_black'/>
+			<img src='img/checker_white.png' id='checker_white'/>
+			<img src='img/checker_king_white.png' id='checker_king_white'/>
+			<img src='img/pawn_white.png' id='pawn_white'/>
+			<img src='img/rook_white.png' id='rook_white'/>
+			<img src='img/knight_white.png' id='knight_white'/>
+			<img src='img/bishop_white.png' id='bishop_white'/>
+			<img src='img/queen_white.png' id='queen_white'/>
+			<img src='img/king_white.png' id='king_white'/>
+			<img src='img/nothing.png' id='nothing' onload='init();'/>
+		</div>
+	</body>
+	<script src='board.js'></script>
+	<script>
+		function init(){
+			board = new Board(8,8,board_canvas);
+			board.initCells();
+			board.getBoardState();
+			board.draw();
+			board_canvas.onmousemove = board.mouseMove;
+			board_canvas.onmouseup = board.mouseUp;
+			$.ajaxSetup({
+				type: 'POST',
+				timeout: 2000,
+			});
+		}
+	</script>
+</html>
