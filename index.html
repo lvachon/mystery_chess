@@ -6,11 +6,14 @@
 		</style>
 	</head>
 	<body>
-		<canvas id='board_canvas' width='800' height='800' oncontextmenu='return false;'></canvas>
-		<input type='button' value='Reset Board' onclick='board.setMCBoard();board.sendBoardState();'/>
-		<input type='button' value='Force refresh' onclick='board.getBoardState();'/>
-		<input type='text' id='board_id' value='0'/>
-		<input type='button' value='Set Board ID' onclick='board.id=board_id.value;board.getBoardState();'/>
+		<canvas id='board_canvas' width='800' height='800' oncontextmenu='return false;' style='float:left;'></canvas>
+		<div style='float:left;width:200px;height:800px;overflow-y:auto;' id='logDom'>Moves:</div>
+		<div style='float:left;'>
+			<input type='button' value='Reset Board' onclick='board.setMCBoard();board.sendBoardState();'/><br/>
+			<input type='button' value='Force refresh' onclick='board.getBoardState();'/><br/>
+			<input type='text' id='board_id' value='0'/><br/>
+			<input type='button' value='Set Board ID' onclick='board.id=board_id.value;board.getBoardState();'/>
+		</div>
 		<div id='hidn'>
 			<img src='img/checker_black.png' id='checker_black'/>
 			<img src='img/checker_king_black.png' id='checker_king_black'/>
@@ -34,7 +37,7 @@
 	<script src='board.js'></script>
 	<script>
 		function init(){
-			board = new Board(8,8,board_canvas);
+			board = new Board(8,8,board_canvas,logDom);
 			board.initCells();
 			board.getBoardState();
 			board.draw();

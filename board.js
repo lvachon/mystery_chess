@@ -39,7 +39,7 @@ PIECE_ICONS = {
 }
 
 
-function Board(width,height,canvas){
+function Board(width,height,canvas,logDom){
 	this.cells = [[]];
 	this.width = width;
 	this.height = height;
@@ -48,6 +48,8 @@ function Board(width,height,canvas){
 	this.canvas = canvas;
 	this.movePiece = -1;
 	this.id=0;
+	this.moveLog = [];
+	this.logDom = logDom
 	this.initCells = function(){
 		this.cells = [];
 		for(var x=0;x<this.width;x++){
@@ -62,13 +64,20 @@ function Board(width,height,canvas){
 		this.initCells();
 		//Fill the top and bottom two rows with checker pieces
 		for(var i=0;i<this.width;i++){
-			this.cells[i][0]=PIECES.CHECKER_WHITE;
-			this.cells[i][1]=PIECES.CHECKER_WHITE;
-			this.cells[i][this.height-1]=PIECES.CHECKER_BLACK;
-			this.cells[i][this.height-2]=PIECES.CHECKER_BLACK;
+			if(!(i%2)){
+				this.cells[i][0]=PIECES.CHECKER_WHITE;
+				this.cells[i][2]=PIECES.CHECKER_WHITE;
+				
+				this.cells[i][this.height-2]=PIECES.CHECKER_BLACK;
+			}else{
+				this.cells[i][1]=PIECES.CHECKER_WHITE;
+				this.cells[i][this.height-1]=PIECES.CHECKER_BLACK;
+				this.cells[i][this.height-3]=PIECES.CHECKER_BLACK;
+			}
 		}
 		this.hidden_whites = [1,2,3,3,4,4,5,5,6,6,6,6,6,6,6,6];
 		this.hidden_blacks = [9,10,11,11,12,12,13,13,14,14,14,14,14,14,14,14];
+		this.moveLog=[];
 	}
 
 	this.drawCell = function(x,y){
@@ -102,12 +111,47 @@ function Board(width,height,canvas){
 	this.draw = function(){
 		var canvas = this.canvas;
 		var ctx = canvas.getContext('2d');
+		var cwidth = canvas.width;
+		var cheight = canvas.height;
+		var cellWidth = cwidth/this.width;
+		var cellHeight = cheight/this.height;
 		ctx.fillStyle="#808080";
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 		for(var x=0;x<this.width;x++){
 			for(var y=0;y<this.height;y++){
 				this.drawCell(x,y);
 			}
+		}
+		if(this.moveLog.length){
+			var x1 = (this.moveLog[this.moveLog.length-1].from % this.width)*cellWidth+cellWidth/2;
+			var y1 = Math.floor(this.moveLog[this.moveLog.length-1].from / this.width)*cellHeight+cellHeight/2;
+			var x2 = (this.moveLog[this.moveLog.length-1].to % this.width)*cellWidth+cellWidth/2;
+			var y2 = Math.floor(this.moveLog[this.moveLog.length-1].to / this.width)*cellHeight+cellHeight/2;
+			var a = Math.atan2(y1-y2,x1-x2);
+			ctx.beginPath();
+			ctx.moveTo(x1+Math.cos(a+Math.PI/2)*4,y1+Math.sin(a+Math.PI/2)*4);//Arrow base
+			ctx.lineTo(x1+Math.cos(a-Math.PI/2)*4,y1+Math.sin(a-Math.PI/2)*4);
+			ctx.lineTo(x2+Math.cos(a-Math.PI/2)*4,y2+Math.sin(a-Math.PI/2)*4);//Arrow neck
+			ctx.lineTo(x2+Math.cos(a-Math.PI/2)*8,y2+Math.sin(a-Math.PI/2)*8);
+			ctx.lineTo(x2+Math.cos(a+Math.PI)*8,y2+Math.sin(a+Math.PI)*8);//Arrow Point
+			ctx.lineTo(x2+Math.cos(a+Math.PI/2)*8,y2+Math.sin(a+Math.PI/2)*8);
+			ctx.lineTo(x2+Math.cos(a+Math.PI/2)*4,y2+Math.sin(a+Math.PI/2)*4);//Arrow neck
+			ctx.lineTo(x1+Math.cos(a+Math.PI/2)*4,y1+Math.sin(a+Math.PI/2)*4);//Close
+			ctx.fillStyle="#00A00080";
+			ctx.fill();
+		}
+	}
+
+	this.showMoves = function(){
+		this.logDom.innerHTML = "Moves:";
+		var cols = ['A','B','C','D','E','F','G','H'];
+		for(var i=0;i<this.moveLog.length;i++){
+			this.logDom.innerHTML += "<br/>";
+			this.logDom.innerHTML += cols[this.moveLog[i].from%this.width];
+			this.logDom.innerHTML += 8-Math.floor(this.moveLog[i].from/this.width);
+			this.logDom.innerHTML += " to ";
+			this.logDom.innerHTML += cols[this.moveLog[i].to%this.width];
+			this.logDom.innerHTML += 8-Math.floor(this.moveLog[i].to/this.width);
 		}
 	}
 
@@ -124,9 +168,10 @@ function Board(width,height,canvas){
 			if(this.movePiece==-1){
 				this.movePiece=this.mouseCellX+this.width*this.mouseCellY;
 			}else{
-				if(this.mouseCellX+this.mouseCellY*this.width!=this.movePiece){
+				if(this.mouseCellX+this.mouseCellY*this.width!=this.movePiece && Math.floor(this.cells[this.mouseCellX][this.mouseCellY]/8)!=Math.floor(this.cells[this.movePiece%this.width][Math.floor(this.movePiece/this.width)]/8)){
 					this.cells[this.mouseCellX][this.mouseCellY] = this.cells[this.movePiece%this.width][Math.floor(this.movePiece/this.width)];
 					this.cells[this.movePiece%this.width][Math.floor(this.movePiece/this.width)] = PIECES.NOTHING;
+					this.moveLog.push({from: this.movePiece, to: this.mouseCellX+this.width*this.mouseCellY});
 				}
 				this.movePiece=-1;
 				this.sendBoardState();
@@ -156,7 +201,7 @@ function Board(width,height,canvas){
 	}.bind(this);
 
 	this.sendBoardState = function(){
-		$.post("save.php",{id:this.id, state: JSON.stringify({cells:this.cells,hw:this.hidden_whites,hb:this.hidden_blacks})});
+		$.post("save.php",{id:this.id, state: JSON.stringify({cells:this.cells,hw:this.hidden_whites,hb:this.hidden_blacks,ml:this.moveLog})});
 	}
 	this.gbsi = 0;
 	this.getBoardState = function(){
@@ -167,7 +212,9 @@ function Board(width,height,canvas){
 				this.cells = d.cells;
 				this.hidden_whites = d.hw;
 				this.hidden_blacks = d.hb;
+				this.moveLog = d.ml;
 				this.draw();
+				this.showMoves();
 			}catch(ex){
 
 			}
