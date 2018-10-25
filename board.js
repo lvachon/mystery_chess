@@ -164,10 +164,14 @@ function Board(width,height,canvas,logDom){
 	}.bind(this);
 
 	this.mouseUp = function(e){
+		//not right mouse button
 		if(e.button!=2){
+			//if the "movePiece" doesn't exist, we're selecting a new one
 			if(this.movePiece==-1){
 				this.movePiece=this.mouseCellX+this.width*this.mouseCellY;
 			}else{
+				//make sure it's a legal move
+				//TODO: seperate these into their own functions
 				if(this.mouseCellX+this.mouseCellY*this.width!=this.movePiece && Math.floor(this.cells[this.mouseCellX][this.mouseCellY]/8)!=Math.floor(this.cells[this.movePiece%this.width][Math.floor(this.movePiece/this.width)]/8)){
 					this.cells[this.mouseCellX][this.mouseCellY] = this.cells[this.movePiece%this.width][Math.floor(this.movePiece/this.width)];
 					this.cells[this.movePiece%this.width][Math.floor(this.movePiece/this.width)] = PIECES.NOTHING;
